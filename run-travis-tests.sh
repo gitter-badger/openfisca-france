@@ -8,13 +8,22 @@
 set -x
 
 current_version=`python setup.py --version`
-if [[ $TRAVIS_PULL_REQUEST && `git rev-parse $current_version` ]]
+if [ $TRAVIS_PULL_REQUEST ]
 then
-	set +x
-	echo "Version $version already exists. Please update version number in setup.py before merging anything into master."
-	exit 1
-fi
+	if git rev-parse $current_version
+	then
+		set +x
+		echo "Version $version already exists. Please update version number in setup.py before merging this branch into master."
+		exit 1
+	fi
 
+	if git diff-index master --quiet CHANGELOG.md
+	then
+		set +x
+		echo "CHANGELOG.md has not been modified. Please update it before merging this branch into master."
+		exit 1
+	fi
+fi
 
 if [ "$TRAVIS_BRANCH" != "master" ]; then
   OPENFISCA_CORE_DIR=`python -c "import pkg_resources; print pkg_resources.get_distribution('OpenFisca-Core').location"`
